@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz Sejarah Kemerdekaan Indonesia</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #ff4b1f, #1fddff);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+            max-width: 600px;
+            width: 100%;
+        }
+
+        .quiz-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .quiz-header h1 {
+            color: #333;
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        .quiz-header .timer {
+            font-size: 1.2em;
+            color: #ff4b1f;
+            font-weight: bold;
+        }
+
+        .welcome-screen {
+            text-align: center;
+        }
+
+        .welcome-screen input {
+            width: 100%;
+            padding: 12px;
+            margin: 20px 0;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1em;
+        }
+
+        .question-container {
+            margin-bottom: 20px;
+        }
+
+        .question {
+            font-size: 1.2em;
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .options {
+            display: grid;
+            gap: 10px;
+        }
+
+        .option {
+            background: white;
+            border: 2px solid #ddd;
+            padding: 15px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .option:hover {
+            background: #f0f0f0;
+            transform: translateY(-2px);
+        }
+
+        .option.selected {
+            background: #1fddff;
+            color: white;
+            border-color: #1fddff;
+        }
+
+        .option.correct {
+            background: #4CAF50;
+            color: white;
+            border-color: #4CAF50;
+        }
+
+        .option.wrong {
+            background: #ff4b1f;
+            color: white;
+            border-color: #ff4b1f;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+
+        button {
+            background: #1fddff;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            margin-top: 25px;
+        }
+
+        button:hover {
+            background: #00b4d8;
+            transform: translateY(-2px);
+        }
+
+        .result {
+            text-align: center;
+            display: none;
+        }
+
+        .result h2 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background: #ddd;
+            border-radius: 5px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+
+        .progress {
+            width: 0%;
+            height: 100%;
+            background: #1fddff;
+            transition: width 0.3s ease;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 20px;
+            }
+
+            .quiz-header h1 {
+                font-size: 1.5em;
+            }
+
+            .question {
+                font-size: 1em;
+            }
+
+            button {
+                padding: 10px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="quiz-header">
+            <h1>Quiz Sejarah Kemerdekaan Indonesia</h1>
+            <div class="timer">Waktu: <span id="time">60</span> detik</div>
+        </div>
+        
+        <div id="welcome-screen" class="welcome-screen">
+            <h2>Selamat Datang!</h2>
+            <input type="text" id="nama-input" placeholder="Masukkan nama Anda">
+            <button onclick="startQuizWithName()">Mulai Quiz</button>
+        </div>
+
+        <div class="progress-bar">
+            <div class="progress" id="progress"></div>
+        </div>
+
+        <div id="quiz-container" style="display: none;">
+            <div class="question-container">
+                <div class="question" id="question"></div>
+                <div class="options" id="options"></div>
+            </div>
+            <div class="controls">
+                <button id="prev-btn">Sebelumnya</button>
+                <button id="next-btn">Selanjutnya</button>
+            </div>
+        </div>
+
+        <div class="result" id="result">
+            <h2>Hasil Quiz</h2>
+            <p>Nama: <span id="result-name"></span></p>
+            <p>Skor Anda: <span id="score">0</span> dari 10</p>
+            <button id="restart-btn">Mulai Ulang</button>
+        </div>
+    </div>
+
+    <script>
+        const quizData = [
+            {
+                question: "Kapan Indonesia memproklamasikan kemerdekaannya?",
+                options: ["17 Agustus 1945", "17 Agustus 1944", "18 Agustus 1945", "16 Agustus 1945"],
+                correct: 0
+            },
+            {
+                question: "Siapa yang mengetik naskah proklamasi?",
+                options: ["Sayuti Melik", "Soekarno", "Mohammad Hatta", "Ahmad Soebardjo"],
+                correct: 0
+            },
+            {
+                question: "Di mana naskah proklamasi ditandatangani?",
+                options: ["Istana Merdeka", "Gedung Pancasila", "Rengasdengklok", "Rumah Laksamana Maeda"],
+                correct: 3
+            },
+            {
+                question: "Peristiwa apakah yang terjadi sebelum proklamasi kemerdekaan?",
+                options: ["Konferensi Meja Bundar", "Peristiwa Rengasdengklok", "Perjanjian Linggarjati", "Konferensi Asia Afrika"],
+                correct: 1
+            },
+            {
+                question: "Siapa yang menjahit bendera Merah Putih pertama?",
+                options: ["R.A. Kartini", "Fatmawati", "Cut Nyak Dien", "Dewi Sartika"],
+                correct: 1
+            },
+            {
+                question: "Apa nama organisasi pemuda yang berperan dalam proklamasi?",
+                options: ["PETA", "NICA", "PPKI", "BPUPKI"],
+                correct: 2
+            },
+            {
+                question: "Siapa yang mengibarkan bendera pada proklamasi kemerdekaan?",
+                options: ["Soekarno-Hatta", "Latief Hendraningrat-S. Suhud", "Ahmad Soebardjo-Sayuti Melik", "Wikana-Darwis"],
+                correct: 1
+            },
+            {
+                question: "Apa yang menjadi latar belakang dipercepatkanya proklamasi?",
+                options: ["Kekalahan Jepang", "Desakan Sekutu", "Perang Dunia II", "Perjanjian dengan Belanda"],
+                correct: 0
+            },
+            {
+                question: "Siapa yang pertama kali mendengar berita kekalahan Jepang?",
+                options: ["Soekarno", "Hatta", "Sutan Sjahrir", "Ahmad Soebardjo"],
+                correct: 2
+            },
+            {
+                question: "Di mana teks proklamasi pertama kali dibacakan?",
+                options: ["Istana Merdeka", "Lapangan IKADA", "Jl. Pegangsaan Timur 56", "Gedung Pancasila"],
+                correct: 2
+            }
+        ];
+
+        let currentQuestion = 0;
+        let score = 0;
+        let timeLeft = 60;
+        let timer;
+        let userName = '';
+
+        const welcomeScreen = document.getElementById('welcome-screen');
+        const questionEl = document.getElementById('question');
+        const optionsEl = document.getElementById('options');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const quizContainer = document.getElementById('quiz-container');
+        const resultContainer = document.getElementById('result');
+        const scoreEl = document.getElementById('score');
+        const restartBtn = document.getElementById('restart-btn');
+        const timeEl = document.getElementById('time');
+        const progressEl = document.getElementById('progress');
+        const resultName = document.getElementById('result-name');
+
+        function startQuizWithName() {
+            userName = document.getElementById('nama-input').value.trim();
+            if (!userName) {
+                alert('Silakan masukkan nama Anda terlebih dahulu!');
+                return;
+            }
+            welcomeScreen.style.display = 'none';
+            startQuiz();
+        }
+
+        function startQuiz() {
+            currentQuestion = 0;
+            score = 0;
+            timeLeft = 60;
+            showQuestion();
+            startTimer();
+            quizContainer.style.display = 'block';
+            resultContainer.style.display = 'none';
+        }
+
+        function showQuestion() {
+            const question = quizData[currentQuestion];
+            questionEl.textContent = `${currentQuestion + 1}. ${question.question}`;
+            
+            optionsEl.innerHTML = '';
+            question.options.forEach((option, index) => {
+                const button = document.createElement('div');
+                button.classList.add('option');
+                button.textContent = option;
+                button.addEventListener('click', () => selectOption(index));
+                optionsEl.appendChild(button);
+            });
+
+            updateProgress();
+            updateNavigationButtons();
+        }
+
+        function selectOption(index) {
+            const options = optionsEl.children;
+            const correctIndex = quizData[currentQuestion].correct;
+
+            // Remove previous selections
+            for (let option of options) {
+                option.classList.remove('selected', 'correct', 'wrong');
+            }
+
+            // Add selected class
+            options[index].classList.add('selected');
+
+            // Show correct/wrong answer
+            if (index === correctIndex) {
+                options[index].classList.add('correct');
+                score++;
+            } else {
+                options[index].classList.add('wrong');
+                options[correctIndex].classList.add('correct');
+            }
+
+            // Disable all options after selection
+            for (let option of options) {
+                option.style.pointerEvents = 'none';
+            }
+
+            // Move to next question after delay
+            setTimeout(() => {
+                currentQuestion++;
+                if (currentQuestion < quizData.length) {
+                    showQuestion();
+                } else {
+                    showResult();
+                }
+            }, 1500);
+        }
+
+        function updateNavigationButtons() {
+            prevBtn.style.visibility = currentQuestion === 0 ? 'hidden' : 'visible';
+            nextBtn.style.display = 'none';
+        }
+
+        function updateProgress() {
+            const progress = ((currentQuestion + 1) / quizData.length) * 100;
+            progressEl.style.width = `${progress}%`;
+        }
+
+        function showResult() {
+            clearInterval(timer);
+            quizContainer.style.display = 'none';
+            resultContainer.style.display = 'block';
+            scoreEl.textContent = score;
+            resultName.textContent = userName;
+        }
+
+        function startTimer() {
+            clearInterval(timer);
+            timer = setInterval(() => {
+                timeLeft--;
+                timeEl.textContent = timeLeft;
+                if (timeLeft <= 0) {
+                    showResult();
+                }
+            }, 1000);
+        }
+
+        prevBtn.addEventListener('click', () => {
+            if (currentQuestion > 0) {
+                currentQuestion--;
+                showQuestion();
+            }
+        });
+
+        restartBtn.addEventListener('click', () => {
+            welcomeScreen.style.display = 'block';
+            resultContainer.style.display = 'none';
+            document.getElementById('nama-input').value = '';
+        });
+    </script>
+</body>
+</html>
